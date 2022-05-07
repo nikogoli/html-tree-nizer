@@ -1,5 +1,0 @@
-{
-  "imports": {
-    "deno_dom/": "https://deno.land/x/deno_dom/"
-  }
-}

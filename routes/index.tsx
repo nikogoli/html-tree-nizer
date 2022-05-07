@@ -4,7 +4,7 @@ import { Handlers } from "../server_deps.ts"
 import { 
   DOMParser,
   Element,
-} from "deno_dom/deno-dom-wasm.ts"
+} from "https://deno.land/x/deno_dom/deno-dom-wasm.ts"
 import { tw } from "https://esm.sh/twind"
 
 type Data = {
