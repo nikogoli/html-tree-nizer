@@ -13,11 +13,14 @@ type Data = {
   target_class: string,
   h1s: string[],
   treed_text: string,
+  go_deep: string,
+  heading: string,
 }
 
 
 function create_item(
   elem: Element,
+  go_deep: boolean,
   texts = [""],
   blanks = "",
 ): Array<string> {
@@ -31,10 +34,11 @@ function create_item(
       texts.push(blanks + tree_text)
       next_blanks = (elem.nextElementSibling) ? blanks + "│  " : blanks + "  "
   }
-  if ( ["DIV", "ARTICLE", "SECTION", "MAIN"].includes(elem.nodeName)){
-      const children = Array.from(elem.children).slice(0,10)
-      texts = children.reduce( (list, child) => create_item(child, list, next_blanks), texts )
-      if(elem.childElementCount > 10){
+  if ( go_deep || ["DIV", "ARTICLE", "SECTION", "MAIN"].includes(elem.nodeName)){
+      const limit = (go_deep) ? 20 : 10
+      const children = Array.from(elem.children).slice(0, limit)
+      texts = children.reduce( (list, child) => create_item(child, go_deep, list, next_blanks), texts )
+      if(elem.childElementCount > limit){
           texts.push( next_blanks + "└" + "... and more" )
       }
   }
@@ -64,8 +68,11 @@ export const handler: Handlers<Data> = {
     const url = total_url.searchParams.get("q") ?? ""
     const target_id = total_url.searchParams.get("id") ?? ""
     const target_class = total_url.searchParams.get("class") ?? ""
+    const go_deep = (total_url.searchParams.get("go_deep")) ?? ""
+    const is_go_deep = (go_deep == "true")
+    const heading = total_url.searchParams.get("heading") ?? "H1"
     if (url == ""){
-      return ctx.render({ url, target_id, target_class, h1s, treed_text })
+      return ctx.render({ url, target_id, target_class, h1s, treed_text, go_deep, heading })
     }
 
     const fetched = await fetch(url)
@@ -78,7 +85,9 @@ export const handler: Handlers<Data> = {
     if (fetched !== null){
       const document = new DOMParser().parseFromString(fetched, "text/html")
       if (document !== null){
-        h1s = Array.from(document.getElementsByTagName("h1")).map(h1 => h1.innerText.trim())
+        h1s = (heading == "H2")
+          ? Array.from(document.getElementsByTagName("h2")).map(h => h.innerText.trim())
+          : Array.from(document.getElementsByTagName("h1")).map(h => h.innerText.trim())
 
         let targets: Array<Element> | null = null
         if (document.getElementsByTagName("article").length > 0){
@@ -104,28 +113,31 @@ export const handler: Handlers<Data> = {
         if (targets !== null){
           let new_targets: Array<Element> = []
           if (target_id.length > 0){
-            new_targets = targets.map(elem => elem.getElementById(target_id)).filter(elem => elem !== null) as Array<Element>
+            if (document.getElementById(target_id) !== null){
+              new_targets = [ document.getElementById(target_id) as Element ]
+            }
           }
           else if (target_class.length > 0){
             new_targets = targets.map(elem => elem.getElementsByClassName(target_class)).flat()
           }
 
           if (new_targets.length > 0){
-            treed_text = new_targets.map(elem => [...create_item(elem), "───────────"]).flat().join("\n")
+            console.log("~~ New target!! ~~")
+            treed_text = new_targets.map(elem => [...create_item(elem, is_go_deep), "───────────"]).flat().join("\n")
           } else {
-            treed_text = targets.map(elem => [...create_item(elem), "───────────"]).flat().join("\n")
+            treed_text = targets.map(elem => [...create_item(elem, is_go_deep), "───────────"]).flat().join("\n")
           }    
         }
       }
     }
-    return ctx.render({ url, target_id, target_class, h1s, treed_text })
+    return ctx.render({ url, target_id, target_class, h1s, treed_text, go_deep, heading })
   },
 }
 
 
 export default function Home({ data }: PageProps<Data>) {
 
-  const { url, target_id, target_class, h1s, treed_text } = data
+  const { url, target_id, target_class, h1s, treed_text, go_deep, heading } = data
   const text_style = {'white-space': 'pre-wrap'}
 
   const forcus_tx = "focus:outline-none focus:ring-2 focus:ring-orange-700"
@@ -151,9 +163,30 @@ export default function Home({ data }: PageProps<Data>) {
             <span class={tw`col-span-1 ${input_head_class}`}> class </span>
             <input type="text" name="class" value={target_class} class={tw`col-span-3 rounded-r-lg border-solid ${input_class}`} placeholder=" contents_body"/>
           </div>
-          <button type="submit" class={tw`w-24 place-self-center rounded-lg my-3 bg-green-700 hover:bg-green-800 border-none text-white transition ease-in duration-200 text-center text-base ${input_class}`}>解析</button>
+          <div class={tw`grid grid-cols-3`}>
+            <div class={tw`col-span-2`}>
+              <div class={tw`flex flex-row items-center gap-2`}>
+                <p class={tw``}>最下層まで</p>
+                <select name="go_deep" value={go_deep} class={tw`w-28 h-9 rounded-md bg-white text-gray-700 border-solid border-orange-300 ${forcus_tx}`}>
+                  <option value="false" selected> 表示しない </option>
+                  <option value="true"> 表示する </option>
+                </select>
+              </div>
+              <div class={tw`flex flex-row items-center gap-2`}>
+                <p class={tw``}>見出し検索</p>
+                <select name="heading" value={heading} class={tw`w-16 h-9 rounded-md bg-white text-gray-700 border-solid border-orange-300 ${forcus_tx}`}>
+                  <option value="H1" selected> H1 </option>
+                  <option value="H2"> H2 </option>
+                </select>
+              </div>
+            </div>
+            <div class={tw`self-center `}>
+              <button type="submit" class={tw`col-start-4 w-24 rounded-lg my-3 bg-green-700 hover:bg-green-800 border-none text-white transition ease-in duration-200 text-center text-base ${input_class}`}>解析</button>
+              {/*<input type="reset" class={tw`col-start-4 w-24 rounded-lg my-3 bg-sky-600 hover:bg-sky-800 border-none text-white transition ease-in duration-200 text-center text-base `} />*/}
+            </div>
+          </div>
         </form>
-        <h3 class={tw`col-span-1 text-sky-700`} >H1</h3>
+        <h3 class={tw`col-span-1 text-sky-700`} > {heading} </h3>
         <div class={tw`col-span-4 my-4`}>
           {h1s.map((name) => <div class={tw`mb-1`}><label><input type="radio" name="h1"/><span> {name}</span></label></div>)}
         </div>
