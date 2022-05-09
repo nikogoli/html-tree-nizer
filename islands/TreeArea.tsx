@@ -1,18 +1,28 @@
 /** @jsx h */
-import { h, useState, useEffect, useRef } from "../client_deps.ts"
+import { h, useState} from "../client_deps.ts"
 import { tw } from "https://esm.sh/twind"
 
 
+type TextWithBool = {
+  display: boolean,
+  text: string
+}
 
-export default function TreeArea(prop: {texts:Record<string, Array<string>>}) {
 
+export default function TreeArea(prop: {data: Array<{type:string, texts:Array<TextWithBool>}>}) {
 
-  const keys = ([...Object.keys(prop.texts)].length > 1)
-    ? [...Object.keys(prop.texts)].filter(t => t != "default")
-    : ["default"]
-  const [ active_key, setActivekey ] = useState(keys[0])
-  const [ lines, setLines ] = useState(prop.texts[active_key])
-  
+  const keys = prop.data.map(x => x.type)
+
+  const [ button_idx, setButtonIdx ] = useState(0)
+  const active_key = keys[button_idx]
+  const act = prop.data.find(x => x.type == active_key)
+  const lines = (act) ? act.texts : [{display: true, text:"not found"}]
+  const [ showlimit, setShowlimit ] = useState(true)
+
+  const shown_lines = (showlimit)
+    ? lines.filter( line => line.display).map(line => line.text)
+    : lines.map(line => line.text)
+
 
   function colored_text(
     text: string,
@@ -35,24 +45,31 @@ export default function TreeArea(prop: {texts:Record<string, Array<string>>}) {
     if (ev === null){ return }
     const { value } = (ev as EventTarget&{"value": string|undefined})
     if (value !== undefined && value != active_key && keys.includes(value)){
-      setActivekey(value)
-      setLines(prop.texts[value])
+      const idx = keys.findIndex(x => x == value)
+      if (idx != button_idx){ setButtonIdx(idx) }
     }
   }
 
-  const base = "grid grid-cols-4 mx-8 mt-4"
+
+  const area_base = "grid grid-cols-4"
   const button_grid = "col-span-1 h-8 mr-1 rounded-t-lg border-solid bg-sky-800 text-center"
   const text_area = "col-start-1 col-span-full h-128 overflow-x-auto overflow-y-auto font-code border-solid border-4 border-orange-800"
 
   return (
-    <div class={tw`${base}`}>
+    <div class={tw`${area_base}`}>
       {keys.map(t => 
         <div class={tw`${button_grid}`}>
           <button value={t} onClick={(e) => lines_by_key(e.target)} class={tw`mt-1 ${(t==active_key) ? "text-orange-300" : "text-white"}`}>{t}</button>
         </div>
       )}
+      <div class={tw`flex ml-6`}>
+        <span class={tw`mr-2`}>詳細表示</span>
+        <input type="checkbox" onClick={() => setShowlimit(!showlimit)} value={String(showlimit)} class={tw`w-12 h-6 checked:sibling:bg-sky-500 checked:sibling:sibling:translate-x-6 checked:sibling:sibling:border-sky-500 cursor-pointer`} />
+        <span class={tw`w-12 h-6 -ml-12 bg-gray-500 rounded-full pointer-events-none`}></span>
+        <span class={tw`w-6 h-6 -ml-12 rounded-full bg-white border-1 border-gray-500 transition pointer-events-none`}></span>
+      </div>
       <div class={tw`${text_area}`}>
-        {lines.map( (t, idx) => colored_text(t, idx))}
+        {shown_lines.map( (t, idx) => colored_text(t, idx))}
       </div>
     </div>
   )
