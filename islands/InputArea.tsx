@@ -57,10 +57,17 @@ function create_item(
   if (["CODE"].includes(tag)) {
     // pass
   } else {
-    const over_limit = (index > 10)// || (["DIV", "ARTICLE", "SECTION", "MAIN"].includes(tag) == false)
+    let show = display
+    if (index > 10){
+      show = false
+    } else {
+      if (["div", "article", "main", "section"].includes(tag) == false){
+        show = false
+      }
+    }
     texts = children.reduce( (list, child_id, idx) => {
       const next_exist = (children.length < 40) ? (idx < children.length-1) : true
-      return create_item(child_id, next_exist, idx, dict, list, next_blanks, !over_limit)
+      return create_item(child_id, next_exist, idx, dict, list, next_blanks, show)
     }, texts )
     if (children.length == 40){
       texts.push({display: false, text: next_blanks + "└" + "... and more" })
