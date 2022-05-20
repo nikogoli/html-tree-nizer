@@ -162,7 +162,7 @@ export default function InputArea(prop: {parsed: ParsedResult}) {
           <HeadingArea dict={headings} />
         </div>
       </div>      
-      <div class={tw`col-span-3`}>
+      <div class={tw`col-span-3 -mt-24 mx-3`}>
         <TreeArea data={treed_texts}/>
       </div>
     </div>

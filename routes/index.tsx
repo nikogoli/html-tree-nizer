@@ -170,20 +170,18 @@ export default function Home({ data }: PageProps<Data>) {
 
   const forcus_tx = "focus:outline-none focus:ring-2 focus:ring-orange-700"
   const border_base = "bg-white border-orange-300 border-solid border-2"
-  const input_head_class = `rounded-l-md -mr-1 ${border_base} text-gray-500 text-base text-center`
-  const input_class = `w-72 bg-white rounded-r-lg ${border_base} text-gray-700 placeholder-gray-400 text-base ${forcus_tx}`
+  const input_class = `w-72 bg-white rounded-lg ${border_base} text-gray-700 placeholder-gray-400 text-base ${forcus_tx}`
 
   return (
-    <div class={tw`grid grid-flow-row-dense grid-cols-5 gap-4 bg-orange-50 font-body`}>
+    <div class={tw`grid grid-cols-5 bg-orange-50 font-body`}>
       <link href="https://fonts.googleapis.com/css2?family=Overpass+Mono&display=swap" rel="stylesheet"></link>
       <link href="https://fonts.googleapis.com/css2?family=RocknRoll+One&display=swap" rel="stylesheet"></link>
-      <h2 class={tw`col-span-2 m-2`}> Tree-nize elements in HTML</h2>
-      <form class={tw`col-span-3 grid grid-cols-5 gap-y-2 items-center`}>
-        <span class={tw`col-span-1 h-8 ${input_head_class}`}> URL </span>
-        <input type="text" name="q" value={url} class={tw`col-span-3 h-8 py-0 ${input_class}`} placeholder=" https://www.example.com/"/>
-        <button class={tw`col-span-1 w-24 rounded-lg my-3 bg-green-700 hover:bg-green-800 border-none text-white transition ease-in duration-200 text-center text-base ${forcus_tx}`}>変更</button>
+      <h2 class={tw`col-span-2 m-2 mt-6 text-xl font-bold`}> Tree-nize elements in HTML</h2>
+      <form class={tw`col-start-1 col-span-2 grid grid-cols-5 gap-y-2 items-center`}>
+        <input type="text" name="q" value={url} class={tw`col-span-4 h-8 ml-2 ${input_class}`} placeholder=" https://www.example.com/"/>
+        <button class={tw`col-span-1 rounded-lg my-3 mr-2 bg-green-700 hover:bg-green-800 border-none text-white transition ease-in duration-200 text-center text-base ${forcus_tx}`}>表示</button>
       </form>
-      <div class={tw`col-span-full`}>
+      <div class={tw`col-span-full mt-1`}>
         <InputArea parsed={parsed}/>
       </div>
     </div>
