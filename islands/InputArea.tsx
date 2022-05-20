@@ -132,7 +132,7 @@ export default function InputArea(prop: {parsed: ParsedResult}) {
   }
 
   const main_base = "grid grid-cols-5"
-  const input_base = "col-span-2 grid grid-cols-4 grid-rows-10"
+  const input_base = "grid grid-cols-4 gap-y-3"
 
   const forcus_tx = "focus:outline-none focus:ring-2 focus:ring-orange-700"
   const border_base = "bg-white border-orange-300 border-solid border-2"
@@ -141,17 +141,19 @@ export default function InputArea(prop: {parsed: ParsedResult}) {
 
   return (
     <div class={tw`${main_base}`}>
-      <div class={tw`${input_base}`}>
-        <span class={tw`col-span-1 h-8 ${input_head_class}`}> id </span>
+      <div class={tw`col-span-2 ml-2`}>
+        <div class={tw`${input_base}`}>
+          <span class={tw`col-span-1 h-8 ${input_head_class}`}> id </span>
           <input type="text" name="id" value={target_id}  ref={id_elem_ref} class={tw`col-span-3 h-8 ${input_class}`} placeholder=" contents"/>
           <span class={tw`col-span-1 h-8 ${input_head_class}`}> class </span>
           <input type="text" name="class" value={target_class}  ref={class_elem_ref} class={tw`col-span-3 h-8 ${input_class}`} placeholder=" contents_body"/>
           <div class={tw`col-span-full justify-self-center`}>
             <button onClick={() => submit_change()}  class={tw`w-24 rounded-lg my-3 bg-sky-700 hover:bg-sky-800 border-none text-white transition ease-in duration-200 text-center text-base ${forcus_tx}`}>変更</button>
           </div>
-          <div class={tw`col-span-full row-span-7`}>
-            <HeadingArea dict={headings} />
-          </div>
+        </div>
+        <div class={tw``}>
+          <HeadingArea dict={headings} />
+        </div>
       </div>      
       <div class={tw`col-span-3`}>
         <TreeArea data={treed_texts}/>
