@@ -115,7 +115,12 @@ export default function InputArea(prop: {parsed: ParsedResult}) {
   const [ target_class, setClass ] = useState("")
 
   const { headings, elem_datas, root_ids } = prop.parsed
-  let treed_texts = create_tree(root_ids, target_id, target_class, elem_datas)
+  let treed_texts: Array<{type: string, texts:Array<TextWithBool>}>
+  if (Object.keys(elem_datas).length > 0){
+    treed_texts = create_tree(root_ids, target_id, target_class, elem_datas)
+  } else {
+    treed_texts = [{type: "default", texts:[{display: true, text:"no data"}]}]
+  }
 
   const id_elem_ref = useRef(null)
   const class_elem_ref = useRef(null)

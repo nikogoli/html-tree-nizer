@@ -65,7 +65,7 @@ function parse_html(
 ) {
 
   const document = new DOMParser().parseFromString(html, "text/html")
-  const headings: Record<string, Array<string>> = { H1: ["not found"], H2: ["not found"] }
+  const headings: Record<string, Array<string>> = { H1: ["no data"], H2: ["no data"] }
   const elem_datas: Record<string, ElementData> = {}
   const roots: Record<string, Array<Element>> = {}
   const root_ids: Record<string, Array<string>> = {}
