@@ -88,20 +88,22 @@ function parse_html(
       console.log("Element type: Main")
       roots["main"] = targets
     }
-    else if (document.querySelectorAll("div[id*='content']").length > 0){
-      const content_elems = document.querySelectorAll("div[id*='content']")
-      const temp: Array<Element> = []
-      content_elems.forEach(el => {
-        if (el.firstChild !== null && el.firstChild.parentElement !== null){
-          temp.push(el.firstChild.parentElement)
-        }
-      })
-      if (temp.length > 0){
-        console.log("Element type: DIV + id(content)")
-        roots["id*='content'"] = temp
-      }
-    } else {
+    else {
       let temp: Array<Element> = []
+      const content_in_divs = [ ...Array.from(document.querySelectorAll("div[id*='content']")) ]
+      if (content_in_divs.length > 0){
+        content_in_divs.forEach(node => {
+          if (node.firstChild && node.firstChild.parentElement){
+            temp.push(node.firstChild.parentElement)
+          }
+        })
+        if (temp.length > 0){
+          console.log("Element type: DIV + id*content")
+          roots["id*='content'"] = temp
+        }
+      }
+      
+      temp = []
       const body_in_ids = [
         ...Array.from(document.querySelectorAll("div[id*='body']")),
         ...Array.from(document.querySelectorAll("div[id*='Body']")),
@@ -130,8 +132,25 @@ function parse_html(
           }
         })
         if (temp.length > 0){
-          console.log("Element type: DIV + class*content")
+          console.log("Element type: DIV + class*body")
           roots["class*='body'"] = temp
+        }
+      }
+
+      temp = []
+      const main_in_classs = [
+        ...Array.from(document.querySelectorAll("div[class*='main']")),
+        ...Array.from(document.querySelectorAll("div[class*='Main']")),
+      ]
+      if (main_in_classs.length > 0){
+        main_in_classs.forEach(node => {
+          if (node.firstChild && node.firstChild.parentElement ){
+            temp.push(node.firstChild.parentElement)
+          }
+        })
+        if (temp.length > 0){
+          console.log("Element type: DIV + class*main")
+          roots["class*='main'"] = temp
         }
       }
     }
