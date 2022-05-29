@@ -23,7 +23,8 @@ type ElementData = {
   class_name: string,
   id_text: string,
   depth: number,
-  children: Array<string>
+  children: Array<string>,
+  html: string
 }
 
 type ParsedResult = {
@@ -32,6 +33,13 @@ type ParsedResult = {
   root_ids: Record<string, Array<string>>,
   html: string,
   env_data: EnvData,
+}
+
+type StateData = {
+  root_idx: string,
+  setRootIdx: (value: string) => void,
+  button_idx: number,
+  setButtonIdx: (value: number) => void,
 }
 
 
@@ -87,29 +95,39 @@ function create_tree(
   roots: Record<string, Array<string>>,
   spcy_id: string,
   spcy_class: string,
-  data: Record<string, ElementData>
+  data: Record<string, ElementData>,
 ) {
   if (spcy_id.length > 0){
     const specified = Object.keys(data).find(id => data[id].id_text == spcy_id)
     if (specified){
-      return [{ type: "id", texts: create_item(specified, false, 0, data)}]
+      return [{ type: "id", texts: [create_item(specified, false, 0, data)], ids: [specified]}]
     } else {
-      return [{ type: "id", texts: [{display: true, text: "specified element is not found"}]}]
+      return [{ type: "id", texts: [[{display: true, text: "specified element is not found"}]], ids: ["default"] }]
     }
   }
   else if (spcy_class.length > 0){
     const specifieds = Object.keys(data).filter(id => data[id].class_name.includes(spcy_class))
     if (specifieds.length > 0){
-      const texts = specifieds.map(id => [...create_item(id, false, 0, data), {display: true, text: "--------------"}]).flat().slice(0, -1)
-      return [{ type: "class", texts }]
+      if (specifieds.length == 1){
+        const texts = [ create_item(specifieds[0], false, 0, data) ]
+        return [{ type: "class", texts, ids: specifieds}]
+      } else {
+        const texts = specifieds.map( id => create_item(id, false, 0, data))
+        return [{ type: "class", texts, ids: specifieds}]
+      }
     } else {
-      return [{ type: "class", texts: [{display: true, text: "specified element is not found"}]}]
+      return [{ type: "class", texts: [[{display: true, text: "specified element is not found"}]], ids: ["default"] }]
     }
   }
-  else {
+  else {      
     return Object.keys(roots).map(key => {
-      const texts = roots[key].map(id => [...create_item(id, false, 0, data), {display: true, text: "--------------"}]).flat().slice(0, -1)
-      return { type: key, texts }
+      if (roots[key].length == 1){
+        const texts = [ create_item(roots[key][0], false, 0, data) ]
+        return { type: key, texts, ids: roots[key]}
+      } else {
+        const texts = roots[key].map( id => create_item(id, false, 0, data))
+        return { type: key, texts, ids: roots[key]}
+      }
     })
   }
 }
@@ -117,37 +135,50 @@ function create_tree(
 
 export default function InputArea(prop: {parsed: ParsedResult}) {
 
-  const [ target_id, setId ] = useState("")
-  const [ target_class, setClass ] = useState("")
+  let target_id = ""
+  let target_class = ""
 
   const { headings, elem_datas, root_ids, html, env_data } = prop.parsed
-  let treed_texts: Array<{type: string, texts:Array<TextWithBool>}>
-  if (Object.keys(elem_datas).length > 0){
-    treed_texts = create_tree(root_ids, target_id, target_class, elem_datas)
+
+  const [ treed_texts, setTreed ] = useState(
+    (Object.keys(elem_datas).length > 0)
+      ? create_tree(root_ids, target_id, target_class, elem_datas)
+      : [{type: "default", texts:[[{display: true, text:"no data"}]], ids: ["default"]}]
+  )
+
+  const [ root_idx, setRootIdx ] = useState("All")
+  const [ button_idx, setButtonIdx ] = useState(0)
+
+  let text = ""
+  let target_html = ""
+  if (root_idx !== "All"){
+    const { tag, id_text, class_name, html } = elem_datas[ treed_texts[button_idx].ids[Number(root_idx)-1] ]
+    text = `${tag} ${(id_text.length > 0) ? 'id="'+id_text+'"' : ""} ${(class_name.length > 0) ? 'class="'+class_name+'"' : ""} '`
+    target_html = html
   } else {
-    treed_texts = [{type: "default", texts:[{display: true, text:"no data"}]}]
+    text = "None"
   }
+
+  const state_data: StateData = { root_idx, setRootIdx, button_idx, setButtonIdx }
 
   const id_elem_ref = useRef(null)
   const class_elem_ref = useRef(null)
 
-  console.log({type: treed_texts[0].type, lengh: treed_texts[0].texts.length})
+  //console.log({type: treed_texts[0].type, lengh: treed_texts[0].texts.length})
 
 
   function submit_change(
   ){
     if (id_elem_ref.current !== null && class_elem_ref !== null){
-      const new_id = (id_elem_ref.current as HTMLInputElement).value
-      const new_class = (class_elem_ref.current as unknown as HTMLInputElement).value
-      if (target_id !== new_id || target_class !== new_class){ 
-        treed_texts = create_tree(root_ids, target_id, target_class, elem_datas)
-       }
-      if ( target_id != new_id ){
-        setId(new_id)
-      }
-      if ( target_class != new_class ){ setClass(new_class) }
+      target_id = (id_elem_ref.current as HTMLInputElement).value
+      target_class = (class_elem_ref.current as unknown as HTMLInputElement).value
+      const new_treed = create_tree(root_ids, target_id, target_class, elem_datas)
+      setTreed(new_treed)
+      const new_count = new_treed[button_idx].ids.length
+      if (new_count > 1 && root_idx !== "All"){ setRootIdx("All") }
     }
   }
+
 
   const main_base = "grid grid-cols-5"
   const input_base = "grid grid-cols-4 gap-y-3"
@@ -163,8 +194,10 @@ export default function InputArea(prop: {parsed: ParsedResult}) {
         <div class={tw`${input_base}`}>
           <span class={tw`col-span-1 h-8 ${input_head_class}`}> id </span>
           <input type="text" name="id" value={target_id}  ref={id_elem_ref} class={tw`col-span-3 h-8 ${input_class}`} placeholder=" contents"/>
+
           <span class={tw`col-span-1 h-8 ${input_head_class}`}> class </span>
           <input type="text" name="class" value={target_class}  ref={class_elem_ref} class={tw`col-span-3 h-8 ${input_class}`} placeholder=" contents_body"/>
+
           <div class={tw`col-span-full justify-self-center`}>
             <button onClick={() => submit_change()}  class={tw`w-24 rounded-lg my-3 bg-sky-700 hover:bg-sky-800 border-none text-white transition ease-in duration-200 text-center text-base ${forcus_tx}`}>変更</button>
           </div>
@@ -173,11 +206,12 @@ export default function InputArea(prop: {parsed: ParsedResult}) {
           <HeadingArea dict={headings} />
         </div>
         <div class={tw`mt-4`}>
+          <p>{`Root-element is: ${text}, length:${target_html.length}`}</p>
           <PostArea data={{html, target_id, target_class, type: treed_texts[0].type, env_data}}/>
         </div>
       </div>      
       <div class={tw`col-span-3 -mt-24 mx-3`}>
-        <TreeArea data={treed_texts}/>
+        <TreeArea data={treed_texts} state_data={state_data}/>
       </div>
     </div>
       

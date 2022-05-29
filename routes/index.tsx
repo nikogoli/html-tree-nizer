@@ -25,7 +25,8 @@ type ElementData = {
   class_name: string,
   id_text: string,
   depth: number,
-  children: Array<string>
+  children: Array<string>,
+  html: string,
 }
 
 
@@ -40,6 +41,7 @@ function record_elem(
   const tag = elem.nodeName.toLowerCase()
   const class_name = elem.className
   const id_text = elem.getAttribute("id") ?? ""
+  const html = elem.outerHTML
   const id = crypto.randomUUID()
 
   if (depth == 0){
@@ -47,7 +49,7 @@ function record_elem(
     else { roots[key] = [id] }
   }
   
-  dict[id] = { id, tag, class_name, id_text, depth, children:[] }
+  dict[id] = { id, tag, class_name, id_text, depth, children: [], html }
   if (parent_id.length > 0 && parent_id in dict){
     dict[parent_id].children.push(id)
   }
