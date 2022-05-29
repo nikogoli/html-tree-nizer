@@ -6,7 +6,8 @@ import * as $0 from "./routes/_render.ts";
 import * as $1 from "./routes/index.tsx";
 import * as $$0 from "./islands/HeadingArea.tsx";
 import * as $$1 from "./islands/InputArea.tsx";
-import * as $$2 from "./islands/TreeArea.tsx";
+import * as $$2 from "./islands/PostArea.tsx";
+import * as $$3 from "./islands/TreeArea.tsx";
 
 const manifest = {
   routes: {
@@ -16,7 +17,8 @@ const manifest = {
   islands: {
     "./islands/HeadingArea.tsx": $$0,
     "./islands/InputArea.tsx": $$1,
-    "./islands/TreeArea.tsx": $$2,
+    "./islands/PostArea.tsx": $$2,
+    "./islands/TreeArea.tsx": $$3,
   },
   baseUrl: import.meta.url,
 };

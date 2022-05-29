@@ -1,11 +1,14 @@
 /** @jsx h */
-import { h, PageProps } from "../client_deps.ts"
+import { h, PageProps, createContext } from "../client_deps.ts"
 import { Handlers } from "../server_deps.ts"
 import { tw } from "https://esm.sh/twind"
 import { 
   DOMParser,
   Element
-} from "https://deno.land/x/deno_dom/deno-dom-wasm.ts"
+} from "https://deno.land/x/deno_dom@v0.1.22-alpha/deno-dom-wasm.ts"
+import {
+  encode,
+} from "https://deno.land/std@0.141.0/encoding/base64.ts"
 
 import InputArea from "../islands/InputArea.tsx"
 
@@ -184,8 +187,12 @@ export const handler: Handlers<Data> = {
 
 export default function Home({ data }: PageProps<Data>) {
 
+  const { URL_PREFIX, USER_TOKEN, TARGET_ID } = Deno.env.toObject()
+  const env_data = { URL_PREFIX, USER_TOKEN, TARGET_ID }
+
   const { url, html } = data
-  const parsed = parse_html(html)
+  const parsed = {...parse_html(html), html:encode(html), env_data}
+  
 
   const forcus_tx = "focus:outline-none focus:ring-2 focus:ring-orange-700"
   const border_base = "bg-white border-orange-300 border-solid border-2"

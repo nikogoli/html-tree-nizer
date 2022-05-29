@@ -1,17 +1,21 @@
 /** @jsx h */
 import { h, useState, useRef, useEffect } from "../client_deps.ts"
 import { tw } from "https://esm.sh/twind"
-import { DOMParser } from "https://esm.sh/xmldom"
 
 import TreeArea from "./TreeArea.tsx"
 import HeadingArea  from "./HeadingArea.tsx"
-
+import PostArea from "./PostArea.tsx"
 
 type TextWithBool = {
   display: boolean,
   text: string
 }
 
+type EnvData = {
+  URL_PREFIX: string;
+  USER_TOKEN: string;
+  TARGET_ID: string;
+}
 
 type ElementData = {
   id: string,
@@ -26,6 +30,8 @@ type ParsedResult = {
   headings: Record<string, Array<string>>,
   elem_datas: Record<string, ElementData>,
   root_ids: Record<string, Array<string>>,
+  html: string,
+  env_data: EnvData,
 }
 
 
@@ -114,7 +120,7 @@ export default function InputArea(prop: {parsed: ParsedResult}) {
   const [ target_id, setId ] = useState("")
   const [ target_class, setClass ] = useState("")
 
-  const { headings, elem_datas, root_ids } = prop.parsed
+  const { headings, elem_datas, root_ids, html, env_data } = prop.parsed
   let treed_texts: Array<{type: string, texts:Array<TextWithBool>}>
   if (Object.keys(elem_datas).length > 0){
     treed_texts = create_tree(root_ids, target_id, target_class, elem_datas)
@@ -165,6 +171,9 @@ export default function InputArea(prop: {parsed: ParsedResult}) {
         </div>
         <div class={tw``}>
           <HeadingArea dict={headings} />
+        </div>
+        <div class={tw`mt-4`}>
+          <PostArea data={{html, target_id, target_class, type: treed_texts[0].type, env_data}}/>
         </div>
       </div>      
       <div class={tw`col-span-3 -mt-24 mx-3`}>
